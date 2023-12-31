@@ -1,8 +1,6 @@
 import numpy as np
 
-def local_contrast(image, sigma):
-    if sigma <= 0:
-        raise ValueError("sigma must be a positive value")
+def local_contrast(image):
 
     height, width, _ = image.shape
     N = height * width
@@ -10,6 +8,8 @@ def local_contrast(image, sigma):
 
     # 画像をフラット化して処理しやすくする
     flat_image = image.reshape(N, 3)
+
+    sigma = (2 / np.pi) * np.sqrt(2 * min(height, width))
 
     # 各ピクセルに対してランダムな近傍ピクセルを選択
     for i in range(N):
@@ -20,6 +20,11 @@ def local_contrast(image, sigma):
         neighbor_index = ny * width + nx
         # 色差ベクトルを計算
         Xl[i, :] = flat_image[i, :] - flat_image[neighbor_index, :]
+
+        # print(x, y)
+        # print(nx, ny) 
+        # print()
+        # print(Xl) #Xlは一行3列のはず
 
     # 局所コントラストを計算
     local_contrast_matrix = np.dot(Xl, Xl.T) / N

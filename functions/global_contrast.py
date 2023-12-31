@@ -3,7 +3,7 @@ from sklearn.cluster import KMeans
 
 def global_contrast(image, num_clusters=20):
     """
-    画像のグローバルコントラストを計算します。
+    画像のグローバルコントラストを計算
 
     :param image: CIE L*a*b* 色空間の入力画像。
     :param num_clusters: k-means クラスタリングで使用するクラスタの数。
