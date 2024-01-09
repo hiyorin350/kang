@@ -1,4 +1,6 @@
 import numpy as np
+import cv2
+
 
 def calculate_color_difference_vectors_with_gaussian_pairing(image):
     """
@@ -15,8 +17,9 @@ def calculate_color_difference_vectors_with_gaussian_pairing(image):
 
     sigma = np.sqrt((2 / np.pi) * np.sqrt(2 * min(height, width)))
 
-    # 画像をフラット化して処理しやすくする
-    flat_image = image.reshape(N, 3)
+    lab_image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    
+    flat_lab_image = lab_image.reshape(N, 3)
 
     # ガウス分布を使用してランダムなペアを生成
     for i in range(N):
@@ -33,6 +36,6 @@ def calculate_color_difference_vectors_with_gaussian_pairing(image):
 
         # 色差ベクトルを計算
         neighbor_index = ny * width + nx
-        Xl[i, :] = flat_image[i, :] - flat_image[neighbor_index]
-
+        Xl[i, :] = flat_lab_image[i, :] - flat_lab_image[neighbor_index]
+    
     return Xl
