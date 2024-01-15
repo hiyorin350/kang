@@ -1,30 +1,20 @@
 import numpy as np
 import cv2
-from math import sqrt, atan2, pi
-from functions import local_contrast
-from functions import global_contrast
 from functions import calculate_color_difference_vectors_with_gaussian_pairing
 from scipy.optimize import minimize
 
-image = cv2.imread('/Users/hiyori/kang/images/Lena.ppm')
+image = cv2.imread('/Users/hiyori/kang/images/chart26.ppm')
 assert image is not None, "読み込みに失敗しました"
 
 height, width, _ = image.shape
 N = height * width
 
 result_image = image
-alpha = 1.0
 
-lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-
-
-#L(u)を計算する関数
-l = local_contrast.local_contrast(cv2.cvtColor(image, cv2.COLOR_BGR2LAB))
-
-#TODO G(u)を計算する関数
+# G(u)を計算する関数、今回は未搭載
 # g = global_contrast.global_contrast(cv2.cvtColor(image, cv2.COLOR_BGR2LAB))
 
-#TODO J(u)を計算する関数
+#TODO J(u)を計算する関数、今回は未搭載
 # j = alpha * l + (1 - alpha) * g
 
 #Xlを計算する関数
@@ -33,11 +23,7 @@ Al = Xl.T @ Xl
 
 # 目的関数と制約条件の定義
 def objective(u):
-    return u.T @ Al @ u
-
-# u = m.add_var("u")
-def constraint(u):
-    return np.dot(u, u) - 1
+    return ((u.T @ Al @ u) / N)
 
 # L*軸に垂直な制約
 def constraint_perpendicular_to_L_star(u):
@@ -57,17 +43,19 @@ constraints = [{'type': 'eq', 'fun': constraint_perpendicular_to_L_star},
                {'type': 'eq', 'fun': constraint_unit_vector}]
 
 # 最適化問題の解決
-res = minimize(objective, u0, constraints=constraints)
+res = minimize(objective, u0, constraints=constraints, method = "SLSQP")
 
 # 最適化された u の値
 optimized_u = res.x
+optimized_u = np.reshape(optimized_u, (3,1))
 
 # 最適化された結果の u^T Al u の値を計算
 optimized_value = (optimized_u.T @ Al @ optimized_u) / N
 
-# 結果の表示
-print("Optimized u:", res.x)
-print("Optimized value of u.T Al u:", optimized_value)
+# 結果の表示 TODO .Tが正しく作用していない。
+print("Optimized u:", optimized_u)
+print("L(u):", optimized_value)
+# print("value_dammy:",optimized_value_dammy )
 
 #TODO 最終的な画像を出す
 print("done!")
