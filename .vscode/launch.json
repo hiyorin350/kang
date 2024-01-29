@@ -6,8 +6,8 @@
       "type": "lldb",
       "request": "launch",
       "args": [],
-      "cwd": "/Users/hiyori/kang/sampleCode",
-      "program": "/Users/hiyori/kang/sampleCode/build/Debug/outDebug"
+      "cwd": "/Users/hiyori/kang",
+      "program": "/Users/hiyori/kang/build/Debug/outDebug"
     }
   ]
 }
