@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from functions import calculate_color_difference_vectors_with_gaussian_pairing
+from functions import *
 from scipy.optimize import minimize
 
 image = cv2.imread('/Users/hiyori/kang/images/chart26.ppm')
@@ -42,7 +42,7 @@ u0 /= np.linalg.norm(u0) #単位ベクトル化
 constraints = [{'type': 'eq', 'fun': constraint_perpendicular_to_L_star},
                {'type': 'eq', 'fun': constraint_unit_vector}]
 
-# 最適化問題の解決
+# 逐次二次計画法による最適化問題の解決
 res = minimize(objective, u0, constraints=constraints, method = "SLSQP")
 
 # 最適化された u の値
@@ -52,13 +52,11 @@ optimized_u = np.reshape(optimized_u, (3,1))
 # 最適化された結果の u^T Al u の値を計算
 optimized_value = (optimized_u.T @ Al @ optimized_u) / N
 
-# 結果の表示 TODO .Tが正しく作用していない。
-print("Optimized u:", optimized_u)
-print("L(u):", optimized_value)
-# print("value_dammy:",optimized_value_dammy )
+# 最適色平面と、二色覚平面の差分だけ回す
+img_out = cycle.cycle(image, optimized_u)
 
-#TODO 最終的な画像を出す
+#最終的な画像を出す
 print("done!")
-# cv2.imshow('result', result_image)
-# cv2.waitKey()
-# cv2.destroyAllWindows()
+cv2.imshow('result', img_out)
+cv2.waitKey()
+cv2.destroyAllWindows()

@@ -66,60 +66,55 @@ def rotate_hue_lab(lab_color, angle):
 
     return np.array([l, a_rotated, b_rotated])
 
-def cycle(image, u):
-    """
-    LAB色空間において、指定した角度だけ色相（h）を回転させる。
+# 画像の読み込み
+image = cv2.imread('/Users/hiyori/kang/images/Chart26.ppm')
 
-    引数:
-    image (numpy.ndarray): BGR色空間を表す配列。
-    u (NDArray[Any]): 最適色空間の法線ベクトル。
+lab_image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
 
-    戻り値:
-    img_out: BGR色空間での回転後の画像を表す配列
-    """
-    # 画像の読み込み
-    image = cv2.imread('/Users/hiyori/kang/images/Chart26.ppm')
+height, width, channels = image.shape
+N = height * width
 
-    lab_image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+flat_lab_image = lab_image.reshape(N, 3)
 
-    height, width, _ = image.shape
-    N = height * width
+lab_out = np.zeros_like(image)
 
-    flat_lab_image = lab_image.reshape(N, 3)
+lab_process = np.zeros((N,3))#8bit扱いから32bit扱いに変換
+for i in range(N):
+    lab_process[i][0] = 100 * flat_lab_image[i][0] / 255
+    lab_process[i][1] = flat_lab_image[i][1] - 128
+    lab_process[i][2] = flat_lab_image[i][2] - 128
 
-    lab_out = np.zeros_like(image)
+#lab_processは(縦、横、チャンネル)形式だが、rotateは(l,a,b)形式を引数としている
 
-    lab_process = np.zeros((N,3))#8bit扱いから32bit扱いに変換
-    for i in range(N):
-        lab_process[i][0] = 100 * flat_lab_image[i][0] / 255
-        lab_process[i][1] = flat_lab_image[i][1] - 128
-        lab_process[i][2] = flat_lab_image[i][2] - 128
+flat_lab = lab_process.reshape(N, 3)
 
-    #lab_processは(縦、横、チャンネル)形式だが、rotateは(l,a,b)形式を引数としている
+u = np.array([ 0. ,-0.07, 0.99])
+optimum_theta = (np.arctan2(u[2], u[1]))
+dichromatic_theta = 90 + 11.48
 
-    flat_lab = lab_process.reshape(N, 3)
+rotated_lab = rotate_hue_lab(flat_lab, dichromatic_theta - (np.rad2deg(optimum_theta)) + 90)
 
-    # u = np.array([ 0. ,-0.07, 0.99])
-    optimum_theta = (np.arctan2(u[2], u[1]))
-    dichromatic_theta = 90 + 11.48
+l_out = np.zeros(N)
+a_out = np.zeros(N)
+b_out = np.zeros(N)
+lab_cripped = np.zeros((N,3))
 
-    rotated_lab = rotate_hue_lab(flat_lab, dichromatic_theta - (np.rad2deg(optimum_theta)) + 90)
+for i in range(N):
+    l_out[i] = 255 * rotated_lab[0,i] / 100
+    a_out[i] = rotated_lab[1,i] + 128
+    b_out[i] = rotated_lab[2,i] + 128
+    lab_cripped = clip_lab_within_rgb_gamut(np.array([l_out[i], a_out[i], b_out[i]], dtype=np.float32))
 
-    l_out = np.zeros(N)
-    a_out = np.zeros(N)
-    b_out = np.zeros(N)
+count = 0
+for i in range(height):
+    for j in range(width):
+        lab_out[i][j] = (l_out[count], a_out[count], b_out[count])
+        count += 1
 
-    for i in range(N):
-        l_out[i] = 255 * rotated_lab[0,i] / 100
-        a_out[i] = rotated_lab[1,i] + 128
-        b_out[i] = rotated_lab[2,i] + 128
+img_out = cv2.cvtColor(lab_out, cv2.COLOR_LAB2BGR)
 
-    count = 0
-    for i in range(height):
-        for j in range(width):
-            lab_out[i][j] = (l_out[count], a_out[count], b_out[count])
-            count += 1
-
-    img_out = cv2.cvtColor(lab_out, cv2.COLOR_LAB2BGR)
-
-    return img_out
+# 回転された画像を表示
+cv2.imwrite('/Users/hiyori/kang/images/Chart26_kang_rotate.ppm',img_out)
+cv2.imshow('cycle_image', img_out)
+cv2.waitKey(0)
+cv2.destroyAllWindows()

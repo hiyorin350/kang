@@ -95,47 +95,48 @@ def clip_lab_within_rgb_gamut(lab_color, step=1):
 
     return np.array([L, a, b])
 
-# 画像の読み込み
-image = cv2.imread('/Users/hiyori/kang/images/Chart26.ppm')
-lab_image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+def projection():
+    # 画像の読み込み
+    image = cv2.imread('/Users/hiyori/kang/images/Chart26.ppm')
+    lab_image = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
 
-height, width, channels = image.shape
+    height, width, channels = image.shape
 
-lab_process = np.zeros_like(image)
-lab_out = np.zeros_like(image)
+    lab_process = np.zeros_like(image)
+    lab_out = np.zeros_like(image)
 
-for i in range(height):# TODO cal~.pyと同様に変えるべきか, 32bitであつかえていない？
-    for j in range(width):
-        l_process = 100 * lab_image[i,j,0] / 255
-        a_process = lab_image[i,j,1] - 128
-        b_process = lab_image[i,j,2] - 128
-        lab_process[i, j, :] = [l_process, a_process, b_process]
-        # print(lab_process)
+    for i in range(height):# TODO cal~.pyと同様に変えるべきか, 32bitであつかえていない？
+        for j in range(width):
+            l_process = 100 * lab_image[i,j,0] / 255
+            a_process = lab_image[i,j,1] - 128
+            b_process = lab_image[i,j,2] - 128
+            lab_process[i, j, :] = [l_process, a_process, b_process]
+            # print(lab_process)
 
-# 法線ベクトル u を定義（例として）
-u = np.array([ 0. ,-0.07, 0.99])
+    # 法線ベクトル u を定義（例として）
+    u = np.array([ 0. ,-0.07, 0.99])
 
-# 画像の画素を色平面に射影
-projected_image = project_pixels_to_color_plane(lab_process, u)
+    # 画像の画素を色平面に射影
+    projected_image = project_pixels_to_color_plane(lab_process, u)
 
-rotate_image = rotate_projected_image_to_angle(projected_image, 90 + 11.48)
-#この後の処理で90 + 11.48からずれている？ + 色域外処理が行われていない？
-#色域の外に出た場合、RGBのどれかが0になっている？
+    rotate_image = rotate_projected_image_to_angle(projected_image, 90 + 11.48)
+    #この後の処理で90 + 11.48からずれている？ + 色域外処理が行われていない？
+    #色域の外に出た場合、RGBのどれかが0になっている？
 
-for i in range(height):
-    for j in range(width):
-        l_out = 255 * rotate_image[i,j,0] / 100
-        a_out = rotate_image[i,j,1] + 128
-        b_out = rotate_image[i,j,2] + 128
-        lab_uncripped = np.array([l_out, a_out, b_out], dtype=np.float32)
-        lab_cripped = clip_lab_within_rgb_gamut(lab_uncripped)
-        lab_out[i, j, :] = lab_cripped
-        print(lab_out)
+    for i in range(height):
+        for j in range(width):
+            l_out = 255 * rotate_image[i,j,0] / 100
+            a_out = rotate_image[i,j,1] + 128
+            b_out = rotate_image[i,j,2] + 128
+            lab_uncripped = np.array([l_out, a_out, b_out], dtype=np.float32)
+            lab_cripped = clip_lab_within_rgb_gamut(lab_uncripped)
+            lab_out[i, j, :] = lab_cripped
+            # print(lab_out)
 
-img_out = cv2.cvtColor(lab_out, cv2.COLOR_LAB2BGR)
+    img_out = cv2.cvtColor(lab_out, cv2.COLOR_LAB2BGR)
 
-# 射影された画像を表示
-cv2.imshow('rotate_image', img_out)
-# cv2.imwrite('/Users/hiyori/kang/images/Chart26_kang_rotate.ppm',img_out)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+    # 射影された画像を表示
+    # cv2.imshow('rotate_image', img_out)
+    # # cv2.imwrite('/Users/hiyori/kang/images/Chart26_kang_rotate.ppm',img_out)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
